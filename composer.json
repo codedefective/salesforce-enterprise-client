@@ -1,0 +1,53 @@
+{
+    "name": "codedefective/salesforce-enterprise-client",
+    "description": "Salesforce Enterprise Client (With Query Builder)",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "Salesforce",
+        "Salesforce Api",
+        "Salesforce Enterprise Client",
+        "Salesforce Query Builder"
+    ],
+    "homepage": "https://github.com/codedefective/salesforce-enterprise-client",
+    "authors": [
+        {
+            "name": "Erdem AKBULUT",
+            "email": "accounts@erdemakbulut.com.tr",
+            "homepage": "https://www.linkedin.com/in/erdemakbulut",
+            "role": "Author"
+        }
+    ],
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "require": {
+        "php": "^8.0",
+        "illuminate/filesystem": "^v8.57.0",
+        "illuminate/contracts": "^8.0",
+        "illuminate/support": "^v8.50",
+        "laravel/framework": "^8.40",
+        "ext-simplexml": "*",
+        "ext-soap": "*"
+    },
+    "scripts": {
+        "post-autoload-dump": "@php artisan vendor:publish --provider=\"Codedefective\\SalesforceEnterpriseClient\\SalesforceEnterpriseClientServiceProvider\""
+    },
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "Codedefective\\SalesforceEnterpriseClient\\" : "src/"
+        },
+        "files": [
+            "src/ExternalLibrary/SforceEnterpriseClient.php"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Codedefective\\SalesforceEnterpriseClient"
+            ]
+        }
+    }
+}
