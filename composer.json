@@ -40,7 +40,8 @@
             "Codedefective\\SalesforceEnterpriseClient\\" : "src/"
         },
         "files": [
-            "src/ExternalLibrary/SforceEnterpriseClient.php"
+            "src/ExternalLibrary/SforceEnterpriseClient.php",
+            "src/ClientHelper.php"
         ]
     },
     "extra": {
