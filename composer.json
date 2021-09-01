@@ -32,7 +32,7 @@
         "ext-soap": "*"
     },
     "scripts": {
-        "post-autoload-dump": "@php artisan vendor:publish --provider=\"Codedefective\\SalesforceEnterpriseClient\\SalesforceEnterpriseClientServiceProvider\""
+        "post-package-install": "@php artisan vendor:publish --provider=\"Codedefective\\SalesforceEnterpriseClient\\SalesforceEnterpriseClientServiceProvider\""
     },
     "prefer-stable": true,
     "autoload": {
