@@ -46,7 +46,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Codedefective\\SalesforceEnterpriseClient"
+                "Codedefective\\SalesforceEnterpriseClient\\SalesforceEnterpriseClientServiceProvider"
             ]
         }
     }
