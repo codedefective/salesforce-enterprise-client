@@ -17,7 +17,7 @@ class SfClient
     protected string $wsdl;
     private int $maxSize = 1000;
     protected string $logDirectory;
-    private array $connectionData = [];
+    private string $sessionId;
     public SforceEnterpriseClient $client;
 
     public function __construct()
@@ -33,36 +33,66 @@ class SfClient
      */
     private function connect(): void
     {
+        $this->client  = new SforceEnterpriseClient();
         try {
-            $this->client  = new SforceEnterpriseClient();
-            $this->client->createConnection($this->wsdl);
+            $options = [
+                'ssl_method' => SOAP_SSL_METHOD_TLS,
+                'encoding'=>'UTF-8',
+                'cache_wsdl'    => WSDL_CACHE_NONE,
+                'stream_context'=> stream_context_create(
+                    [
+                        'ssl'=> [
+                            'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT,
+                            'ciphers' => 'SHA256',
+                            'verify_peer'=>false,
+                            'verify_peer_name'=>false,
+                            'allow_self_signed' => true
+                        ]
+                    ]
+                )
+            ];
+            $this->client->createConnection($this->wsdl,null,$options);
             $conn_file_name = $this->getLogPath();
 
-            if(Storage::exists($conn_file_name)){
-                $content = trim(Storage::get($conn_file_name));
-                $this->connectionData = $content == "" ? []: explode("@@", $content);
-            }
 
-            if (count($this->connectionData) < 2) {
-                $this->client->login
-                (
-                    username: config("salesforce_enterprise.current.username"),
-                    password: config('salesforce_enterprise.current.password').config('salesforce_enterprise.current.token')
-                );
-
-                Storage::put($conn_file_name, $this->client->getLocation()."@@".$this->client->getSessionId().'@@current');
-                $text_message = "New Connection";
+            if(Storage::exists($conn_file_name) && $sessionId = trim(Storage::get($conn_file_name))){
+                $this->sessionId = $sessionId;
             }else{
-                $this->client->setEndpoint($this->connectionData[0]);
-                $this->client->setSessionHeader($this->connectionData[1]);
-                $text_message = "Current Session";
+                $this->sessionId = $this->reGenerateSfSession();
             }
 
-            Log::info("Sf Login Success: ". $text_message);
+            $this->client->setEndpoint(config("salesforce_enterprise.location"));
+            $this->client->setSessionHeader($this->sessionId);
+
+            if ($this->client->getUserInfo()->userName <> config("salesforce_enterprise.username")) {
+                $this->reGenerateSfSession();
+            }
+
+            Log::info("Sf Login Success: ". $this->sessionId);
 
         }catch (Exception $e){
-            Log::error("Sf Login Error: ". $e->getMessage());
+            Log::error("Sf Login Error [Regenerating]: ". $e->getMessage());
+            $this->reGenerateSfSession();
         }
+    }
+
+    /**
+     * @return string
+     */
+    private function reGenerateSfSession(): string
+    {
+        $this->client->login
+        (
+            username: config("salesforce_enterprise.username"),
+            password: config('salesforce_enterprise.password').config('salesforce_enterprise.token')
+        );
+
+        $this->client->setEndpoint($this->client->getLocation());
+        $sessionId = $this->client->getSessionId();
+        $this->client->setSessionHeader($sessionId);
+        Storage::put($this->getLogPath(), $sessionId);
+        Log::info("[Regenerated] Sf Login Success: ". $sessionId);
+        return $sessionId;
     }
 
     /**
@@ -117,6 +147,6 @@ class SfClient
      */
     private function getLogPath() :string
     {
-        return $this->logDirectory . '/' . date('Y') . '/' . date('m') . '/' . date('d'). '/' . 'sf_connection_'.date('Y_m_d').'.txt';
+        return $this->logDirectory . '/.connection.ini';
     }
 }

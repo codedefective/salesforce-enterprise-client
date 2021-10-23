@@ -85,7 +85,7 @@ class SfQueryManager
     private function getWhere(): string
     {
         $q = '';
-        if (isset($this->conditions)){
+        if (!empty($this->conditions)){
             $q.='Where ' . PHP_EOL;
             foreach ($this->conditions as $conditionKey =>  $condition) {
                 $condition['value'] = $this->validateConditionValue($condition['value'],$condition['operator']);

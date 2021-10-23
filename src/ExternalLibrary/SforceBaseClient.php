@@ -972,7 +972,7 @@ class QueryResult implements Iterator{
 	public function rewind() { $this->pointer = 0; }
 	public function next() { ++$this->pointer; }
 	public function key() { return $this->pointer; }
-	public function current() { return new SObject($this->records[$this->pointer]); }
+	public function current() { return new SObject($this->records[$this->pointer] ?? null); }
 
 	public function valid() {
 		while ($this->pointer >= count($this->records)) {
