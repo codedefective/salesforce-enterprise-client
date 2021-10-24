@@ -45,9 +45,21 @@ class SfQueryManager
      * @param string $operator
      * @return $this
      */
-    public function where(string $column, string|int|float|bool $value, string $operator='=' ): static
+    public function where(string $column, string|int|float|bool $value, string $operator='=', $bracket=false): static
     {
-        array_push($this->conditions, ['column' => trim($column), 'value' => (is_string($value) ? trim($value) : $value), 'operator' => trim($operator)]);
+        array_push($this->conditions, ['bracket' => $bracket ,'column' => trim($column), 'value' => (is_string($value) ? trim($value) : $value), 'operator' => trim($operator)]);
+        return $this;
+    }
+
+    /**
+     * @param string $column
+     * @param string|int|float|bool $value
+     * @param string $operator
+     * @return $this
+     */
+    public function orWhere(string $column, string|int|float|bool $value, string $operator='=', $bracket=false): static
+    {
+        array_push($this->conditions, ['isOr' => true, 'bracket' => $bracket, 'column' => trim($column), 'value' => (is_string($value) ? trim($value) : $value), 'operator' => trim($operator)]);
         return $this;
     }
 
@@ -68,7 +80,7 @@ class SfQueryManager
     private function generateQuery(): string
     {
         $q= /** @lang text */
-            'Select ';
+            'Select '. PHP_EOL . "\t";
         $q.= trim(implode(', ',$this->columns)) . ' '. PHP_EOL;
         $q.='From '. PHP_EOL;
         $q.="\t" . $this->from . ' ' . PHP_EOL;
@@ -87,12 +99,21 @@ class SfQueryManager
         $q = '';
         if (!empty($this->conditions)){
             $q.='Where ' . PHP_EOL;
+            $q.=  "\t";
             foreach ($this->conditions as $conditionKey =>  $condition) {
                 $condition['value'] = $this->validateConditionValue($condition['value'],$condition['operator']);
-                $q.= "\t";
+                $bracketType = !isset($condition['bracket']) || !$condition['bracket'] ?  false :  ($condition['bracket'] === '(' ? 'start' : ($condition['bracket'] === ')' ? 'stop' : false));
+                $q.= isset($condition['isOr']) ? ' OR ' : '';
+                $q.= $bracketType === 'start' ? '( ' : '';
+                if ($condition['operator'] === 'NOT LIKE') {
+                    $condition['column'] = '( NOT ' . $condition['column'];
+                    $condition['operator'] = 'LIKE';
+                    $condition['value'] = $condition['value'] . ' )';
+                }
                 $q.= ($condition['column'] . ' ' . $condition['operator'] . ' ' . $condition['value']);
-                if (($conditionKey+1) != count($this->conditions)){
-                    $q.=' and ' . PHP_EOL;
+                $q.= $bracketType === 'stop' ? ' )' : '';
+                if (($conditionKey+1) != count($this->conditions) && !isset($this->conditions[$conditionKey+1]['isOr'])){
+                    $q.=' and ' . PHP_EOL  . "\t";
                 }
             }
         }
