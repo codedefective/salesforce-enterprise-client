@@ -68,8 +68,6 @@ class SfClient
                 $this->reGenerateSfSession();
             }
 
-            Log::info("Sf Login Success: ". $this->sessionId);
-
         }catch (Exception $e){
             Log::error("Sf Login Error [Regenerating]: ". $e->getMessage());
             $this->reGenerateSfSession();
