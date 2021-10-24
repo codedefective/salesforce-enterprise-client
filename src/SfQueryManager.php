@@ -9,7 +9,9 @@ class SfQueryManager
     private string $from;
     private array $columns = [];
     private array $conditions = [];
-    private int $limit;
+    private string|null $ordering = null;
+    private string|null $grouping = null;
+    private int $limit = 0;
 
 
     public function __construct()
@@ -45,7 +47,7 @@ class SfQueryManager
      * @param string $operator
      * @return $this
      */
-    public function where(string $column, string|int|float|bool $value, string $operator='=', $bracket=false): static
+    public function where(string $column, string|int|float|bool|NULL $value, string $operator='=', $bracket=false): static
     {
         array_push($this->conditions, ['bracket' => $bracket ,'column' => trim($column), 'value' => (is_string($value) ? trim($value) : $value), 'operator' => trim($operator)]);
         return $this;
@@ -57,12 +59,21 @@ class SfQueryManager
      * @param string $operator
      * @return $this
      */
-    public function orWhere(string $column, string|int|float|bool $value, string $operator='=', $bracket=false): static
+    public function orWhere(string $column, string|int|float|bool|NULL $value, string $operator='=', $bracket=false): static
     {
         array_push($this->conditions, ['isOr' => true, 'bracket' => $bracket, 'column' => trim($column), 'value' => (is_string($value) ? trim($value) : $value), 'operator' => trim($operator)]);
         return $this;
     }
 
+    public function orderBy($column,$sort='ASC'){
+        $this->ordering = 'ORDER BY '. PHP_EOL . "\t" .  $column . ' '. $sort . ' ';
+        return $this;
+    }
+
+    public function groupBy($column){
+        $this->grouping = 'GROUP BY '. PHP_EOL . "\t" .  $column . ' ';
+        return $this;
+    }
 
     /**
      * @param int $limit
@@ -79,15 +90,14 @@ class SfQueryManager
      */
     private function generateQuery(): string
     {
-        $q= /** @lang text */
-            'Select '. PHP_EOL . "\t";
+        $q=  'Select '. PHP_EOL . "\t";
         $q.= trim(implode(', ',$this->columns)) . ' '. PHP_EOL;
         $q.='From '. PHP_EOL;
         $q.="\t" . $this->from . ' ' . PHP_EOL;
         $q.= $this->getWhere() . ' '. PHP_EOL;
-        if (isset($this->limit)){
-            $q.= 'Limit ' . $this->limit . ' ' . PHP_EOL;
-        }
+        $q.= !is_null($this->grouping) ? $this->grouping . PHP_EOL : '';
+        $q.= !is_null($this->ordering) ? $this->ordering . PHP_EOL : '';
+        $q.= $this->limit > 0 ? 'Limit ' .PHP_EOL . "\t" . $this->limit . ' ' . PHP_EOL : '';
         return trim($q);
     }
 
@@ -144,7 +154,7 @@ class SfQueryManager
         if (!isDate($value) && is_string($value)) $value = "'".$value."'";
         if (isDate($value) && ($operator === '>' || $operator === '>=' )) $value = $value . 'T00:00:00.000Z';
         if (isDate($value) && ($operator === '<' || $operator === '<=' )) $value = $value . 'T23:59:59.999Z';
-
+        if ($value === NULL && gettype($value) === 'NULL') $value = 'NULL';
         return $value;
     }
 
