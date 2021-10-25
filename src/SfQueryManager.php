@@ -32,11 +32,12 @@ class SfQueryManager
 
 
     /**
-     * @param ...$columns
+     * @param string|array $columns
      * @return $this
      */
-    public function select(...$columns): static
+    public function select(string|array $columns): static
     {
+        $columns = is_array($columns) ? $columns : func_get_args();
         $this->columns = array_merge($this->columns, $columns);
         return $this;
     }
