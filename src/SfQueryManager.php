@@ -49,7 +49,7 @@ class SfQueryManager
      * @param bool $bracket
      * @return $this
      */
-    public function where(string $column, string|int|float|bool|NULL $value, string $operator='=', bool $bracket=false): static
+    public function where(string $column, string|int|float|bool|NULL $value, string $operator='=', $bracket=false): static
     {
         array_push($this->conditions, ['bracket' => $bracket ,'column' => trim($column), 'value' => (is_string($value) ? trim($value) : $value), 'operator' => trim($operator)]);
         return $this;
@@ -62,7 +62,7 @@ class SfQueryManager
      * @param bool $bracket
      * @return $this
      */
-    public function orWhere(string $column, string|int|float|bool|NULL $value, string $operator='=', bool $bracket=false): static
+    public function orWhere(string $column, string|int|float|bool|NULL $value, string $operator='=', $bracket=false): static
     {
         array_push($this->conditions, ['isOr' => true, 'bracket' => $bracket, 'column' => trim($column), 'value' => (is_string($value) ? trim($value) : $value), 'operator' => trim($operator)]);
         return $this;
